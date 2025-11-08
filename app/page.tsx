@@ -16,24 +16,28 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full max-w-6xl px-6 py-20 text-center">
+      <section className="w-full max-w-6xl px-6 pt-24 pb-10 text-center">
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-5xl font-bold text-orange-900 mb-6"
+          className="text-7xl font-extrabold text-orange-900 mb-6 tracking-tight"
         >
           HungerHelper
         </motion.h1>
-        <p className="text-lg text-orange-800 max-w-2xl mx-auto mb-10">
-  HungerHelper is an all-in-one platform designed to make it easier for people
-  in need to find open and nearby food pantries based on their schedule,
-  location, and transportation options. Our pilot focus is the Columbus
-  metropolitan area—starting with neighborhoods that need it most. In the South
-  Side alone, over 30,000 residents call the area home, and nearly 60% live
-  below the national poverty line. HungerHelper helps bridge that gap by making
-  essential food access information simple, accurate, and easy to navigate.
-</p>
+
+        <p className="text-base md:text-lg text-orange-800 max-w-2xl mx-auto leading-relaxed">
+          HungerHelper makes finding food assistance simple, fast, and
+          accessible. Our mission is to connect people in need with nearby
+          pantries and meal services that fit their schedule and transportation
+          options. We’re starting in the Columbus metropolitan area—where in the
+          South Side alone, over{" "}
+          <span className="font-semibold">30,000 residents</span> live, and
+          nearly <span className="font-semibold">60%</span> fall below the
+          national poverty line. By streamlining access to verified, up-to-date
+          food resources, HungerHelper helps families spend less time searching
+          and more time thriving.
+        </p>
 
         <div className="flex justify-center gap-3">
           <Link href="#find">
