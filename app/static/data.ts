@@ -7,6 +7,8 @@ export interface Slot {
   startTime: number;
   endTime?: number;
 }
+export const ServiceOptions = ["meal", "pantry", "both"] as const;
+export type ServiceType = (typeof ServiceOptions)[number];
 
 export interface OperationInfo {
   slots: Slot[];
@@ -19,6 +21,7 @@ export interface LocationEntry {
   Location: [number, number];
   Address: string;
   Phone?: number;
+  ServiceType: ServiceType;
   additionalNotes: string;
   OperationInfo?: OperationInfo;
 }
@@ -26,9 +29,10 @@ export interface LocationEntry {
 const locations: LocationEntry[] = [
   {
     Name: "Bethany Presbyterian",
-    Location: [40.758, -83.6753],
+    Location: [39.96902, -82.97985], // Columbus, OH
     Address: "206 North Garfield Avenue",
     Phone: 6142530077,
+    ServiceType: "meal",
     additionalNotes: "",
     OperationInfo: {
       slots: [{ Day: 7, startTime: 690, endTime: 810 }], // Saturday 11:30am–1:30pm
@@ -38,9 +42,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "The Dream Center",
-    Location: [40.758, -83.6753],
+    Location: [39.98651, -83.00655],
     Address: "38 West Greenwood",
     Phone: 6145473138,
+    ServiceType: "pantry",
     additionalNotes: "",
     OperationInfo: {
       slots: [
@@ -60,9 +65,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Victory Ministries Center Of Hope",
-    Location: [40.758, -83.6753],
+    Location: [39.95636, -82.893], // Columbus, OH
     Address: "3964 East Main Street",
     Phone: 6142522500,
+    ServiceType: "meal",
     additionalNotes: "Pantry, Clothing",
     OperationInfo: {
       slots: [
@@ -75,9 +81,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Community Kitchen Inc.",
-    Location: [40.758, -83.6753],
+    Location: [39.95211, -82.9709], // Columbus, OH
     Address: "640 South Ohio Avenue",
     Phone: 6142526428,
+    ServiceType: "meal",
     additionalNotes: "",
     OperationInfo: {
       slots: [
@@ -100,9 +107,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Holy Family Meal Program",
-    Location: [40.758, -83.6753],
+    Location: [39.96125, -83.01664], // Columbus, OH
     Address: "588 West Gay Street",
     Phone: 6144619444,
+    ServiceType: "meal",
     additionalNotes: "rear lot",
     OperationInfo: {
       slots: [
@@ -118,9 +126,11 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "St. Johns UCC at Trinity",
-    Location: [40.758, -83.6753],
+    Location: [39.96239, -82.99719], // Columbus, OH
     Address: "125 East Broad Street",
     Phone: 6142248634,
+    ServiceType: "pantry",
+
     additionalNotes: "",
     OperationInfo: {
       slots: [{ Day: 4, startTime: 720, endTime: 720 }], // Wednesday 12pm
@@ -133,6 +143,8 @@ const locations: LocationEntry[] = [
     Location: [40.758, -83.6753],
     Address: "342 North Hague Avenue",
     Phone: 6145073246,
+    ServiceType: "pantry",
+
     additionalNotes: "lunch",
     OperationInfo: {
       slots: [{ Day: 1, startTime: 660, endTime: 780 }], // Sunday 11am–1pm
@@ -142,9 +154,11 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Reeb Center",
-    Location: [40.758, -83.6753],
+    Location: [39.92541, -82.98728], // Columbus, OH
     Address: "280 Reeb Avenue",
     Phone: 6144689280,
+    ServiceType: "pantry",
+
     additionalNotes: "Mon–Fri: lunch; Tue: dinner",
     OperationInfo: {
       slots: [
@@ -161,9 +175,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Mount Olivet Baptist Church",
-    Location: [40.758, -83.6753],
+    Location: [39.95778, -82.98794], // Columbus, OH
     Address: "428 East Main Street",
     Phone: 6142213446,
+    ServiceType: "meal",
     additionalNotes: "clothes, meal, hygiene",
     OperationInfo: {
       slots: [{ Day: 6, startTime: 660, endTime: 780 }], // Friday 11am–1pm
@@ -173,9 +188,11 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "New Life Community Outreach",
-    Location: [40.758, -83.6753],
+    Location: [39.98691, -83.00645], // Columbus, OH
     Address: "25 West 5th Avenue",
     Phone: 6142940134,
+    ServiceType: "pantry",
+
     additionalNotes: "breakfast",
     OperationInfo: {
       slots: [{ Day: 1, startTime: 420, endTime: 510 }], // Sunday 7–8:30am
@@ -185,8 +202,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Open Shelter",
-    Location: [40.758, -83.6753],
+    Location: [39.94247, -82.98342],
     Address: "1037 Parsons Avenue",
+    ServiceType: "pantry",
+
     Phone: 6142222885,
     additionalNotes: "",
     OperationInfo: {
@@ -203,9 +222,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Shiloah Christian Center",
-    Location: [40.758, -83.6753],
+    Location: [39.9644, -82.97943],
     Address: "787 East Broad Street",
     Phone: 6149148406,
+    ServiceType: "meal",
     additionalNotes: "breakfast Wednesday; lunch and dinner Thu–Sat",
     OperationInfo: {
       slots: [
@@ -223,9 +243,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Saint Lawrence Haven - SVDP",
-    Location: [40.758, -83.6753],
+    Location: [39.95881, -82.99295],
     Address: "244 East Rich Street",
     Phone: 6142412569,
+    ServiceType: "pantry",
     additionalNotes: "",
     OperationInfo: {
       slots: [
@@ -241,9 +262,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "First English Lutheran",
-    Location: [40.758, -83.6753],
+    Location: [39.95763, -82.97209],
     Address: "1015 East Main Street",
     Phone: 6142523191,
+    ServiceType: "pantry",
     additionalNotes: "",
     OperationInfo: {
       slots: [
@@ -259,6 +281,7 @@ const locations: LocationEntry[] = [
     Location: [40.758, -83.6753],
     Address: "787 East Broad Street",
     Phone: 6145000656,
+    ServiceType: "meal",
     additionalNotes: "breakfast and dinner",
     OperationInfo: {
       slots: [
@@ -275,9 +298,10 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Stowe Mission",
-    Location: [40.758, -83.6753],
+    Location: [39.94537, -82.98254],
     Address: "888 Parsons Avenue",
     Phone: 6144458400,
+    ServiceType: "both",
     additionalNotes: "",
     OperationInfo: {
       slots: [
@@ -290,20 +314,22 @@ const locations: LocationEntry[] = [
   },
   {
     Name: "Trinity Episcopal Church",
-    Location: [40.758, -83.6753],
+    Location: [39.96239, -82.99719],
     Address: "125 East Broad Street",
+    ServiceType: "both",
     Phone: 6142215351,
     additionalNotes: "",
     OperationInfo: {
-      slots: [{ Day: 1, startTime: 780, endTime: 780 }],
+      slots: [{ Day: 1, startTime: 780, endTime: 810 }],
       text: "Sunday 1 pm",
       additionalInfo: "",
     },
   },
   {
     Name: "Feed My Sheep Ministries",
-    Location: [40.758, -83.6753],
+    Location: [39.95558, -83.06349],
     Address: "2364 West Broad Street",
+    ServiceType: "both",
     Phone: 6147215414,
     additionalNotes: "",
     OperationInfo: {

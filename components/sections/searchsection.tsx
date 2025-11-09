@@ -27,41 +27,46 @@ export default function SearchSection() {
       id="find"
       className="w-full max-w-5xl px-6 bg-gradient-to-br from-orange-50 to-amber-100 rounded-3xl shadow-lg"
     >
-      <Card className="shadow-xl rounded-2xl">
+      <Card className="shadow-xl rounded-2xl bg-transparent/20">
         <CardContent className="p-10 md:p-14 flex flex-col gap-10">
           <h2 className="text-2xl font-semibold text-orange-900 text-center">
             Search for Food Pantries Near You
           </h2>
 
-          <div className="flex flex-col gap-10 justify-center items-center">
+          {/* Date & Time Selector (centered layout) */}
+          <div className="flex flex-col md:flex-row justify-center items-start md:items-start gap-12 w-full max-w-4xl mx-auto text-center md:text-left">
             {/* Date Picker */}
-            <div className="flex flex-col items-center w-full">
-              <Label className="mb-2 text-orange-900 font-medium">
-                Choose a date (today or a future day)
-              </Label>
-              <div className="flex items-start gap-3">
-                <CalendarIcon className="text-orange-700 mt-2" />
+            <div className="flex flex-col items-center md:items-center w-full md:w-1/2">
+              <div className="flex flex-col items-center">
+                <CalendarIcon className="text-orange-700 mb-2" />
+                <Label className="mb-2 text-orange-900 font-medium">
+                  Choose a date
+                </Label>
+              </div>
+              <div className="bg-white">
                 <CalendarComponent
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className="rounded-md border border-orange-200 p-2 bg-white w-fit"
+                  className="rounded-md border border-orange-200 p-2 bg-white"
                 />
               </div>
             </div>
 
             {/* Time Picker */}
-            <div className="flex flex-col items-center w-full">
-              <Label className="mb-2 text-orange-900 font-medium">
-                Choose a time (current or later)
-              </Label>
-              <div className="flex items-center gap-3">
-                <Clock className="text-orange-700" />
+            <div className="flex flex-col items-center md:items-center w-full md:w-1/2">
+              <div className="flex flex-col items-center">
+                <Clock className="text-orange-700 mb-2" />
+                <Label className="mb-2 text-orange-900 font-medium">
+                  Choose a time
+                </Label>
+              </div>
+              <div className="flex items-center justify-center gap-2">
                 <Input
                   type="time"
                   value={time}
                   onChange={(e) => setTime(e.target.value)}
-                  className="flex-1 max-w-xs"
+                  className="flex-1 max-w-[160px] bg-white"
                 />
                 <Button
                   variant="outline"
@@ -75,7 +80,8 @@ export default function SearchSection() {
             </div>
           </div>
 
-          <div className="flex justify-center">
+          {/* Search Button */}
+          <div className="flex justify-center mt-6">
             <Button
               asChild
               className="w-full max-w-xs mx-auto bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-semibold py-3 rounded-full transition"
@@ -88,6 +94,33 @@ export default function SearchSection() {
                 Search Pantries
               </Link>
             </Button>
+          </div>
+
+          {/* Map + Other Button Section */}
+          <div className="flex flex-col md:flex-row justify-center items-center gap-8 mt-8">
+            {/* Left: Map Button */}
+            <div className="flex flex-col items-center">
+              <p className="text-orange-900 font-medium mb-3">
+                Prefer to view nearby pantries on a map?
+              </p>
+              <Link href="/map">
+                <Button className="bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 px-6 rounded-full transition">
+                  View Map
+                </Button>
+              </Link>
+            </div>
+
+            {/* Right: Duplicate or New Section */}
+            <div className="flex flex-col items-center">
+              <p className="text-orange-900 font-medium mb-3">
+                Would you rather chat with our assistant?
+              </p>
+              <Link href="https://hungerhelper-ai-assistant-184852063683.us-west1.run.app/">
+                <Button className="bg-yellow-800 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-full transition">
+                    Hunger Helper Chatbot
+                </Button>
+              </Link>
+            </div>
           </div>
         </CardContent>
       </Card>

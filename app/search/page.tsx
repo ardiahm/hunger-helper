@@ -10,13 +10,17 @@ import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import locations, { LocationEntry, Slot } from "@/app/static/data";
 import Link from "next/link";
+import Navbar from "@/components/sections/Navbar";
+import { Nav } from "react-day-picker";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    searchParams.get("date") ? new Date(searchParams.get("date")!) : new Date()
+    searchParams.get("date")
+      ? new Date(`${searchParams.get("date")}T00:00:00`)
+      : new Date()
   );
   const [time, setTime] = useState<string>(searchParams.get("time") || "");
 
@@ -69,8 +73,15 @@ export default function SearchPage() {
     return grouped;
   };
 
+  // Convert JS Date to your 1–7 convention (Sunday = 1)
+  const getDayNumberFromDate = (date: Date): number => {
+    const jsDay = date.getDay(); // JS: Sunday=0 … Saturday=6
+    return jsDay === 0 ? 1 : jsDay + 1; // Your convention: Sunday=1 … Saturday=7
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 flex flex-col items-center">
+      <Navbar />
       {/* Header */}
       <section className="w-full max-w-6xl px-6 py-20 text-center">
         <h1 className="text-5xl font-bold text-orange-900 mb-6">
@@ -80,37 +91,42 @@ export default function SearchPage() {
           Browse every listed pantry in the Columbus area. Operating days and
           hours are displayed in a clear, human-readable format.
         </p>
+        <p className="text-orange-800 max-w-2xl mx-auto mb-10">
+          Input a date and time below to filter pantries. All changes are updated automatically. You can use today's date and the current time, or plan ahead!
+        </p>
 
-        {/* Date & Time Selector (kept for future use) */}
-        <div className="flex flex-col gap-8 items-center w-full max-w-md mx-auto">
+        {/* Date & Time Selector (centered layout) */}
+        <div className="flex flex-col md:flex-row justify-center items-start md:items-start gap-12 w-full max-w-4xl mx-auto text-center md:text-left">
           {/* Date Picker */}
-          <div className="flex flex-col items-center w-full">
-            <Label className="mb-2 text-orange-900 font-medium">
-              Choose a date
-            </Label>
-            <div className="flex items-center justify-center gap-2">
-              <CalendarIcon className="text-orange-700" />
-              <CalendarComponent
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-md border border-orange-200 p-2 bg-white"
-              />
+          <div className="flex flex-col items-center md:items-center w-full md:w-1/2">
+            <div className="flex flex-col items-center">
+              <CalendarIcon className="text-orange-700 mb-2" />
+              <Label className="mb-2 text-orange-900 font-medium">
+                Choose a date
+              </Label>
             </div>
+            <CalendarComponent
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-md border border-orange-200 p-2 bg-white"
+            />
           </div>
 
           {/* Time Picker */}
-          <div className="flex flex-col items-center w-full">
-            <Label className="mb-2 text-orange-900 font-medium">
-              Choose a time
-            </Label>
+          <div className="flex flex-col items-center md:items-center w-full md:w-1/2">
+            <div className="flex flex-col items-center">
+              <Clock className="text-orange-700 mb-2" />
+              <Label className="mb-2 text-orange-900 font-medium">
+                Choose a time
+              </Label>
+            </div>
             <div className="flex items-center justify-center gap-2">
-              <Clock className="text-orange-700" />
               <Input
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="flex-1 max-w-[160px]"
+                className="flex-1 max-w-[160px] bg-white"
               />
               <Button
                 variant="outline"
@@ -128,6 +144,33 @@ export default function SearchPage() {
             </div>
           </div>
         </div>
+
+        {/* Map + Other Button Section */}
+          <div className="flex flex-col md:flex-row justify-center items-center gap-8 mt-8">
+            {/* Left: Map Button */}
+            <div className="flex flex-col items-center">
+              <p className="text-orange-900 font-medium mb-3">
+                Prefer to view nearby pantries on a map?
+              </p>
+              <Link href="/map">
+                <Button className="bg-orange-300 hover:bg-orange-400 text-white font-semibold py-3 px-6 rounded-full transition">
+                  View Map
+                </Button>
+              </Link>
+            </div>
+
+            {/* Right: Duplicate or New Section */}
+            <div className="flex flex-col items-center">
+              <p className="text-orange-900 font-medium mb-3">
+                Would you rather chat with our assistant?
+              </p>
+              <Link href="https://hungerhelper-ai-assistant-184852063683.us-west1.run.app/">
+                <Button className="bg-yellow-800 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-full transition">
+                    Hunger Helper Chatbot
+                </Button>
+              </Link>
+            </div>
+          </div>
       </section>
 
       {/* Results */}
@@ -146,16 +189,55 @@ export default function SearchPage() {
                 <h3 className="font-bold text-lg text-orange-900">
                   {loc.Name}
                 </h3>
-                <p className="text-orange-800 text-sm">{loc.Address}</p>
+                <p className="text-orange-800 text-sm">
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      loc.Address
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-orange-600 transition-colors"
+                  >
+                    {loc.Address}
+                  </a>
+                </p>{" "}
                 {loc.Phone && (
                   <p className="text-orange-700 text-sm">
                     📞 {loc.Phone.toString()}
                   </p>
                 )}
                 {loc.OperationInfo?.slots ? (
-                  <p className="text-sm text-orange-900 italic">
-                    {formatOperationSlots(loc.OperationInfo.slots)}
-                  </p>
+                  <div className="text-sm text-orange-900 italic space-y-1">
+                    {Object.entries(
+                      loc.OperationInfo.slots.reduce((acc, slot) => {
+                        const dayName = dayToWeekday(slot.Day);
+                        const timeRange = `${formatTime(slot.startTime)}${
+                          slot.endTime ? `–${formatTime(slot.endTime)}` : ""
+                        }`;
+                        if (!acc[dayName]) acc[dayName] = [];
+                        acc[dayName].push({
+                          range: timeRange,
+                          dayNum: slot.Day,
+                        });
+                        return acc;
+                      }, {} as Record<string, { range: string; dayNum: number }[]>)
+                    ).map(([day, slots]) => {
+                      const isToday =
+                        selectedDate &&
+                        slots.some(
+                          (s) => s.dayNum === getDayNumberFromDate(selectedDate)
+                        );
+                      return (
+                        <p
+                          key={day}
+                          className={isToday ? "italic font-semibold" : ""}
+                        >
+                          <span className="font-semibold">{day}:</span>{" "}
+                          {slots.map((s) => s.range).join("; ")}
+                        </p>
+                      );
+                    })}
+                  </div>
                 ) : (
                   <p className="text-sm text-orange-700 italic">
                     Schedule not available
