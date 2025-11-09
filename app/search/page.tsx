@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar as CalendarIcon, Clock } from "lucide-react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import locations, { LocationEntry, Slot } from "@/app/static/data";
+import locations, { LocationEntry, Slot, ServiceType } from "@/app/static/data";
 import Link from "next/link";
 import Navbar from "@/components/sections/Navbar";
-import { Nav } from "react-day-picker";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -23,17 +23,10 @@ export default function SearchPage() {
       : new Date()
   );
   const [time, setTime] = useState<string>(searchParams.get("time") || "");
+  const [serviceType, setServiceType] = useState<ServiceType | "all">("all");
+  const [filteredLocations, setFilteredLocations] = useState<LocationEntry[]>(locations);
 
-  // Update URL params when date/time changes (for consistency)
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (selectedDate)
-      params.set("date", selectedDate.toISOString().split("T")[0]);
-    if (time) params.set("time", time);
-    router.replace(`/search?${params.toString()}`);
-  }, [selectedDate, time, router]);
-
-  // Convert minutes → readable time
+  // --- Helpers ---
   const formatTime = (minutes: number | undefined) => {
     if (minutes === undefined) return "";
     const h = Math.floor(minutes / 60);
@@ -44,67 +37,80 @@ export default function SearchPage() {
     return `${hours12}:${padded}${suffix}`;
   };
 
-  // Convert day number → weekday
   const dayToWeekday = (day: number) => {
-    const days = [
-      "Sunday", // index 0 unused since we start at 1
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ];
+    const days = ["", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     return days[day] || "";
   };
 
-  // Format all operation slots into readable strings
-  const formatOperationSlots = (slots: Slot[]) => {
-    if (!slots || slots.length === 0) return "No schedule available";
-    const grouped = slots
-      .map(
-        (s) =>
-          `${dayToWeekday(s.Day)}: ${formatTime(s.startTime)}${
-            s.endTime ? `–${formatTime(s.endTime)}` : ""
-          }`
-      )
-      .join("; ");
-    return grouped;
+  const getDayNumberFromDate = (date: Date): number => {
+    const jsDay = date.getDay(); // Sunday = 0 … Saturday = 6
+    return jsDay === 0 ? 1 : jsDay + 1;
   };
 
-  // Convert JS Date to your 1–7 convention (Sunday = 1)
-  const getDayNumberFromDate = (date: Date): number => {
-    const jsDay = date.getDay(); // JS: Sunday=0 … Saturday=6
-    return jsDay === 0 ? 1 : jsDay + 1; // Your convention: Sunday=1 … Saturday=7
+  const timeToMinutes = (timeStr: string) => {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
+
+  // --- Core Filtering Logic ---
+  useEffect(() => {
+    if (!selectedDate && !time && serviceType === "all") {
+      setFilteredLocations(locations);
+      return;
+    }
+
+    const currentDay = selectedDate ? getDayNumberFromDate(selectedDate) : undefined;
+    const currentMinutes = time ? timeToMinutes(time) : undefined;
+
+    const matches = locations.filter((loc) => {
+      // Filter by service type if not "all"
+      if (serviceType !== "all" && loc.ServiceType !== serviceType && loc.ServiceType !== "both") {
+        return false;
+      }
+
+      // If no date/time filtering, include
+      if (!currentDay || !currentMinutes) return true;
+
+      // Check if any slot matches the selected day and time
+      const slots = loc.OperationInfo?.slots || [];
+      return slots.some((slot) => {
+        const isSameDay = slot.Day === currentDay;
+        const withinTime =
+          currentMinutes >= slot.startTime &&
+          (slot.endTime ? currentMinutes <= slot.endTime : true);
+        return isSameDay && withinTime;
+      });
+    });
+
+    setFilteredLocations(matches);
+  }, [selectedDate, time, serviceType]);
+
+  const handleReset = () => {
+    setSelectedDate(new Date());
+    setTime("");
+    setServiceType("all");
+    setFilteredLocations(locations);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 flex flex-col items-center">
       <Navbar />
-      {/* Header */}
+
       <section className="w-full max-w-6xl px-6 py-20 text-center">
         <h1 className="text-5xl font-bold text-orange-900 mb-6">
           All Food Pantries
         </h1>
-        <p className="text-orange-800 max-w-2xl mx-auto mb-10">
-          Browse every listed pantry in the Columbus area. Operating days and
-          hours are displayed in a clear, human-readable format.
-        </p>
-        <p className="text-orange-800 max-w-2xl mx-auto mb-10">
-          Input a date and time below to filter pantries. All changes are updated automatically. You can use today's date and the current time, or plan ahead!
+        <p className="text-orange-800 max-w-2xl mx-auto mb-8">
+          Browse every listed pantry in the Columbus area and filter by time or service type.
         </p>
 
-        {/* Date & Time Selector (centered layout) */}
-        <div className="flex flex-col md:flex-row justify-center items-start md:items-start gap-12 w-full max-w-4xl mx-auto text-center md:text-left">
+        {/* --- Date, Time, and Type Selectors --- */}
+        <div className="flex flex-col md:flex-row justify-center items-start gap-12 w-full max-w-4xl mx-auto text-center md:text-left">
+
           {/* Date Picker */}
-          <div className="flex flex-col items-center md:items-center w-full md:w-1/2">
-            <div className="flex flex-col items-center">
-              <CalendarIcon className="text-orange-700 mb-2" />
-              <Label className="mb-2 text-orange-900 font-medium">
-                Choose a date
-              </Label>
-            </div>
+          <div className="flex flex-col items-center w-full md:w-1/3">
+            <CalendarIcon className="text-orange-700 mb-2" />
+            <Label className="mb-2 text-orange-900 font-medium">Choose a Date</Label>
             <CalendarComponent
               mode="single"
               selected={selectedDate}
@@ -114,13 +120,9 @@ export default function SearchPage() {
           </div>
 
           {/* Time Picker */}
-          <div className="flex flex-col items-center md:items-center w-full md:w-1/2">
-            <div className="flex flex-col items-center">
-              <Clock className="text-orange-700 mb-2" />
-              <Label className="mb-2 text-orange-900 font-medium">
-                Choose a time
-              </Label>
-            </div>
+          <div className="flex flex-col items-center w-full md:w-1/3">
+            <Clock className="text-orange-700 mb-2" />
+            <Label className="mb-2 text-orange-900 font-medium">Choose a Time</Label>
             <div className="flex items-center justify-center gap-2">
               <Input
                 type="time"
@@ -143,118 +145,160 @@ export default function SearchPage() {
               </Button>
             </div>
           </div>
+
+          {/* Service Type Picker */}
+          <div className="flex flex-col items-center w-full md:w-1/3">
+            <Label className="mb-2 text-orange-900 font-medium">Service Type</Label>
+            <RadioGroup
+              defaultValue="all"
+              value={serviceType}
+              onValueChange={(v: "all" | ServiceType) => setServiceType(v)}
+              className="flex flex-col space-y-2 text-left"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="all" id="all" />
+                <Label htmlFor="all">All</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="meal" id="meal" />
+                <Label htmlFor="meal">Meal</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pantry" id="pantry" />
+                <Label htmlFor="pantry">Pantry</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="both" id="both" />
+                <Label htmlFor="both">Both</Label>
+              </div>
+            </RadioGroup>
+          </div>
         </div>
 
-        {/* Map + Other Button Section */}
-          <div className="flex flex-col md:flex-row justify-center items-center gap-8 mt-8">
-            {/* Left: Map Button */}
-            <div className="flex flex-col items-center">
-              <p className="text-orange-900 font-medium mb-3">
-                Prefer to view nearby pantries on a map?
-              </p>
-              <Link href="/map">
-                <Button className="bg-orange-300 hover:bg-orange-400 text-white font-semibold py-3 px-6 rounded-full transition">
-                  View Map
-                </Button>
-              </Link>
-            </div>
-
-            {/* Right: Duplicate or New Section */}
-            <div className="flex flex-col items-center">
-              <p className="text-orange-900 font-medium mb-3">
-                Would you rather chat with our assistant?
-              </p>
-              <Link href="https://hungerhelper-ai-assistant-184852063683.us-west1.run.app/">
-                <Button className="bg-yellow-800 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-full transition">
-                    Hunger Helper Chatbot
-                </Button>
-              </Link>
-            </div>
-          </div>
+        {/* Reset Button */}
+        <div className="mt-8">
+          <Button
+            onClick={handleReset}
+            className="bg-orange-500 hover:bg-orange-600 text-white"
+          >
+            Reset Filters
+          </Button>
+        </div>
       </section>
 
-      {/* Results */}
+      {/* --- Filtered Results --- */}
       <section className="w-full max-w-6xl px-6 pb-20">
         <h2 className="text-3xl font-semibold text-orange-900 mb-8 text-center">
           Pantry Directory
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {locations.map((loc: LocationEntry) => (
-            <Card
-              key={loc.Name}
-              className="rounded-2xl border-orange-200 hover:shadow-md transition"
+        {filteredLocations.length === 0 ? (
+  <div className="text-center text-orange-800">
+    <p className="mb-4 font-medium">
+      No resources are available for the selected date and time.
+    </p>
+    <Button
+      onClick={handleReset}
+      className="bg-orange-600 hover:bg-orange-700 text-white"
+    >
+      Reset Filters
+    </Button>
+  </div>
+) : (
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {filteredLocations.map((loc) => (
+      <Card
+        key={loc.Name}
+        className="rounded-2xl border-orange-200 hover:shadow-md transition"
+      >
+        <CardContent className="p-6 text-left space-y-2">
+          <h3 className="font-bold text-lg text-orange-900">{loc.Name}</h3>
+          <p className="text-orange-800 text-sm">
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                loc.Address
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-orange-600 transition-colors"
             >
-              <CardContent className="p-6 text-left space-y-2">
-                <h3 className="font-bold text-lg text-orange-900">
-                  {loc.Name}
-                </h3>
-                <p className="text-orange-800 text-sm">
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                      loc.Address
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline hover:text-orange-600 transition-colors"
+              {loc.Address}
+            </a>
+          </p>
+          {loc.Phone && (
+            <p className="text-orange-700 text-sm">📞 {loc.Phone}</p>
+          )}
+
+          {/* Operation Info Section with Highlighting */}
+          {loc.OperationInfo?.slots ? (
+            <div className="text-sm text-orange-900 italic space-y-1">
+              {Object.entries(
+                loc.OperationInfo.slots.reduce((acc, slot) => {
+                  const dayName = dayToWeekday(slot.Day);
+                  const range = `${formatTime(slot.startTime)}${
+                    slot.endTime ? `–${formatTime(slot.endTime)}` : ""
+                  }`;
+                  if (!acc[dayName]) acc[dayName] = [];
+                  acc[dayName].push({
+                    range,
+                    dayNum: slot.Day,
+                    start: slot.startTime,
+                    end: slot.endTime ?? slot.startTime,
+                  });
+                  return acc;
+                }, {} as Record<string, { range: string; dayNum: number; start: number; end: number }[]>)
+              ).map(([day, slots]) => {
+                // Highlight logic
+                const isToday =
+                  selectedDate &&
+                  slots.some(
+                    (s) => s.dayNum === getDayNumberFromDate(selectedDate)
+                  );
+                const isNow =
+                  selectedDate &&
+                  time &&
+                  slots.some((s) => {
+                    const nowMin = timeToMinutes(time);
+                    return (
+                      s.dayNum === getDayNumberFromDate(selectedDate) &&
+                      nowMin >= s.start &&
+                      nowMin <= s.end
+                    );
+                  });
+
+                return (
+                  <p
+                    key={day}
+                    className={`${
+                      isToday
+                        ? isNow
+                          ? "font-extrabold text-orange-700"
+                          : "font-semibold text-orange-800"
+                        : ""
+                    }`}
                   >
-                    {loc.Address}
-                  </a>
-                </p>{" "}
-                {loc.Phone && (
-                  <p className="text-orange-700 text-sm">
-                    📞 {loc.Phone.toString()}
+                    <span className="font-semibold">{day}:</span>{" "}
+                    {slots.map((s) => s.range).join("; ")}
                   </p>
-                )}
-                {loc.OperationInfo?.slots ? (
-                  <div className="text-sm text-orange-900 italic space-y-1">
-                    {Object.entries(
-                      loc.OperationInfo.slots.reduce((acc, slot) => {
-                        const dayName = dayToWeekday(slot.Day);
-                        const timeRange = `${formatTime(slot.startTime)}${
-                          slot.endTime ? `–${formatTime(slot.endTime)}` : ""
-                        }`;
-                        if (!acc[dayName]) acc[dayName] = [];
-                        acc[dayName].push({
-                          range: timeRange,
-                          dayNum: slot.Day,
-                        });
-                        return acc;
-                      }, {} as Record<string, { range: string; dayNum: number }[]>)
-                    ).map(([day, slots]) => {
-                      const isToday =
-                        selectedDate &&
-                        slots.some(
-                          (s) => s.dayNum === getDayNumberFromDate(selectedDate)
-                        );
-                      return (
-                        <p
-                          key={day}
-                          className={isToday ? "italic font-semibold" : ""}
-                        >
-                          <span className="font-semibold">{day}:</span>{" "}
-                          {slots.map((s) => s.range).join("; ")}
-                        </p>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-orange-700 italic">
-                    Schedule not available
-                  </p>
-                )}
-                {loc.additionalNotes && (
-                  <p className="text-xs text-orange-700">
-                    {loc.additionalNotes}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-orange-700 italic">
+              Schedule not available
+            </p>
+          )}
+
+          {loc.additionalNotes && (
+            <p className="text-xs text-orange-700">{loc.additionalNotes}</p>
+          )}
+        </CardContent>
+      </Card>
+    ))}
+  </div>
+)}
       </section>
 
-      {/* Footer */}
       <footer className="w-full py-8 border-t border-orange-300 text-center text-orange-800 text-sm">
         <Link href="/" className="underline hover:text-orange-700">
           ← Back to Home

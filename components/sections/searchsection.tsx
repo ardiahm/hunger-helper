@@ -104,7 +104,7 @@ export default function SearchSection() {
                 Prefer to view nearby pantries on a map?
               </p>
               <Link href="/map">
-                <Button className="bg-orange-400 hover:bg-orange-500 text-white font-semibold py-3 px-6 rounded-full transition">
+                <Button className="bg-orange-300 hover:bg-orange-400 text-orange-900  font-semibold py-3 px-6 rounded-full transition">
                   View Map
                 </Button>
               </Link>
